@@ -179,8 +179,7 @@ def random_transform(image, angle):
     return image, angle
 
 
-def augment_driving_log(image_paths, angles, correction,
-                        rel_in_path=DATA_DIR, rel_out_path=DATA_GENERATED_DIR):
+def flatten_driving_log(image_paths, angles, correction, rel_in_path=DATA_DIR):
     res_images_paths = []
     res_angles = []
 
@@ -206,29 +205,20 @@ def augment_driving_log(image_paths, angles, correction,
         # if right camera image -> correct steering to the left
         res_angles.append(right_angle)
 
-        # save flipped version of images above
-        transformed_image_center, transformed_center_angle = random_transform(load_image(center), center_angle)
-        transformed_image_left, transformed_left_angle = random_transform(load_image(left), left_angle)
-        transformed_image_right, transformed_right_angle = random_transform(load_image(right), right_angle)
+    return np.array(res_images_paths), np.array(res_angles)
 
-        transformed_center_path = os.path.join(rel_out_path, basename(center))
-        transformed_left_path = os.path.join(rel_out_path, basename(left))
-        transformed_right_path = os.path.join(rel_out_path, basename(right))
 
-        save_image(transformed_center_path, transformed_image_center, transformed_center_angle)
-        save_image(transformed_left_path, transformed_image_left, transformed_left_angle)
-        save_image(transformed_right_path, transformed_image_right, transformed_right_angle)
+def augment_driving_log(image_paths, angles, out_path=DATA_GENERATED_DIR):
+    res_images_paths = []
+    res_angles = []
 
-        res_images_paths.append(transformed_center_path)
-        res_images_paths.append(transformed_left_path)
-        res_images_paths.append(transformed_right_path)
-
-        # if center camera image -> no correction
-        res_angles.append(transformed_center_angle)
-        # if left camera image -> correct steering to the right
-        res_angles.append(transformed_left_angle)
-        # if right camera image -> correct steering to the left
-        res_angles.append(transformed_right_angle)
+    for image_path, angle in tqdm(zip(image_paths, angles)):
+        transformed_image, transformed_angle = \
+            random_transform(load_image(image_path), angle)
+        transformed_path = os.path.join(out_path, basename(image_path))
+        save_image(transformed_path, transformed_image, transformed_angle)
+        res_images_paths.append(transformed_path)
+        res_angles.append(transformed_angle)
 
     return np.array(res_images_paths), np.array(res_angles)
 
@@ -316,8 +306,11 @@ def load_input_data(correction, angle_groups,
     print("Load data", flush=True)
     X, y = load_driving_log(logfile=logfile, size=init_size, random=init_shuffle)
 
+    print("Flatten data", flush=True)
+    X_flat, y_flat = flatten_driving_log(X, y, correction=correction)
+
     print("Augment data", flush=True)
-    X_input, y_input = augment_driving_log(X, y, correction=correction)
+    X_input, y_input = augment_driving_log(X_flat, y_flat)
 
     print("Adjust data", flush=True)
     X_adj, y_adj = adjust_with_best_fit(X_input, y_input, angle_groups)
@@ -342,7 +335,7 @@ def save_model_history(history, model_history_file_path=MODEL_HISTORY_FILE):
         pickle.dump(history, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def plot_images(images, classes=None, cols=None, squeeze=True, title=None, savepath=None):
+def plot_images(images, angles=None, cols=None, squeeze=True, title=None, savepath=None):
     if cols is None:
         cols = len(images)
 
@@ -369,8 +362,8 @@ def plot_images(images, classes=None, cols=None, squeeze=True, title=None, savep
             else:
                 axs[index].imshow(image)
 
-            if classes is not None:
-                axs[index].set_title(classes[index])
+            if angles is not None:
+                axs[index].set_title(angles[index])
     if title is not None:
         plt.suptitle(title, fontsize=12)
 
