@@ -1,0 +1,11 @@
+.DS_Store
+__MACOSX
+.idea
+.ipynb_checkpoints
+__pycache__
+data/IMG
+data/generated
+output*
+*.log*
+*.zip
+archive*
