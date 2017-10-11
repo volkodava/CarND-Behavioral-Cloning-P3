@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 
 import helper
 
+# default command line parameters
 SAVE_BEST_ONLY = False
 ACTIVATION = 'relu'
 # If dropout rate is set to 0.2 (20%) - one in 5 inputs will be randomly excluded from each update cycle
@@ -47,8 +48,11 @@ flags.DEFINE_integer('angle_groups', ANGLE_GROUPS, "Number of angle groups. Defa
 
 
 def build_model(input_shape=helper.INPUT_SHAPE):
+    # build the model
     model = Sequential()
+    # normalize the input images
     model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=input_shape))
+    # crop the input images
     model.add(Cropping2D(cropping=((71, 23), (0, 0))))
     model.add(Convolution2D(24, 5, 5, subsample=(2, 2), activation=FLAGS.activation))
     model.add(Convolution2D(36, 5, 5, subsample=(2, 2), activation=FLAGS.activation))
@@ -74,15 +78,11 @@ def data_generator(image_paths, angles, batch_size=FLAGS.batch_size):
 
 def train_model(model, train_generator, train_data_size, valid_generator, valid_data_size,
                 callbacks, learning_rate=FLAGS.learning_rate, nb_epoch=FLAGS.nb_epoch):
+    # Train using adam optimizer
     model.compile(optimizer=Adam(lr=learning_rate), loss='mse', metrics=['mse', 'acc'])
     return model.fit_generator(train_generator, samples_per_epoch=train_data_size,
                                validation_data=valid_generator, nb_val_samples=valid_data_size,
                                nb_epoch=nb_epoch, callbacks=callbacks, verbose=FLAGS.verbose)
-
-
-def evaluate_model(model, x, y):
-    loss, mean_squared_error, acc = model.evaluate(x, y, verbose=FLAGS.verbose)
-    print('\nTesting loss: {}, acc: {}\n'.format(loss, acc))
 
 
 def run(model, callbacks):
@@ -125,6 +125,7 @@ def main(_):
     model = build_model()
     model.summary()
 
+    # stop training when a validation loss has stopped improving
     early_stopping = EarlyStopping(
         monitor='val_loss',
         min_delta=0,
@@ -133,6 +134,7 @@ def main(_):
         mode='auto'
     )
 
+    # save the model after every epoch
     checkpoint = ModelCheckpoint(filepath=helper.MODEL_FILE, save_best_only=FLAGS.save_best_only,
                                  verbose=FLAGS.verbose)
 

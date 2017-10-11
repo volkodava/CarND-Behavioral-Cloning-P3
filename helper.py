@@ -243,10 +243,11 @@ def reduce_size_of(range_x, range_y, over_limit_num):
     return range_x[selected_indices], range_y[selected_indices]
 
 
-def adjust_with_best_fit(X_input, y_input, angle_groups):
+def adjust_with_best_fit_line(X_input, y_input, angle_groups):
     bins, y = calc_optimal_distribution(y_input, bins_num=angle_groups)
     X_adj = y_adj = None
-    for idx, range_bin in tqdm(enumerate(bins)):
+    idx = 0
+    for idx, range_bin in tqdm(bins):
         if idx + 1 == len(bins):
             break
 
@@ -298,6 +299,8 @@ def adjust_with_best_fit(X_input, y_input, angle_groups):
             X_adj = np.concatenate((X_adj, new_range_x), axis=0)
             y_adj = np.concatenate((y_adj, new_range_y), axis=0)
 
+        idx += 1
+
     return X_adj, y_adj
 
 
@@ -313,7 +316,7 @@ def load_input_data(correction, angle_groups,
     X_input, y_input = augment_driving_log(X_flat, y_flat)
 
     print("Adjust data", flush=True)
-    X_adj, y_adj = adjust_with_best_fit(X_input, y_input, angle_groups)
+    X_adj, y_adj = adjust_with_best_fit_line(X_input, y_input, angle_groups)
 
     return X_adj, y_adj
 
