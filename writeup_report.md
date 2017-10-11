@@ -68,19 +68,19 @@ My model consists of:
 
 The model contains dropout layers in order to reduce overfitting ([link](model.py#L62)) 
 
-The model was trained and validated on different data sets to ensure that the model was not overfitting ([link](model.py#L94). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track ([link](model.py#L108))
+The model was trained and validated on different data sets to ensure that the model was not overfitting ([link](model.py#L94)). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track ([link](model.py#L108))
 
 #### 3. Model parameter tuning
 
 The model used:
 
-- adam optimizer for optimization with learning rate of 1.0e-4 (default is 1.0e-3), to make the model improving validation loss longer ([link](model.py#L82))
+- adam optimizer for optimization with learning rate of 1.0e-4 (default is 1.0e-3) to make the model improving validation loss longer ([link](model.py#L82))
 - mean squared error for the loss function to measure how precise the model predicts steering angle ([link](model.py#L82))
-- ModelCheckpoint to save the model after every epoch with EarlyStopping callback to stop training when a validation loss has stopped improving within 2 epochs ([link](model.py#L129), [link](model.py#L138))
+- ModelCheckpoint to save the model after every epoch with EarlyStopping callback to stop training when a validation loss has stops improving within 2 epochs ([link](model.py#L129), [link](model.py#L138))
 
 #### 4. Appropriate training data
 
-Training data was chosen to keep the vehicle driving on the road. I used Udacity dataset to train and validate model in proportion of 80% to train model and 20% to validate. Image augumentation helped me to generate more data for my model to avoid overfitting.
+Training data was chosen to keep the vehicle driving on the road. I used Udacity dataset to train and validate model in proportion of 80% to train model and 20% to validate it. Image augumentation helped me to generate more data for my model to avoid overfitting.
 To augment the dataset I've used:
 
 - left image with adjusted steering angle by +0.2
@@ -89,7 +89,7 @@ To augment the dataset I've used:
 - image brightness shift
 - image channel shift
 
-Left/right images is useful to train the recovery driving scenario, brightness/channel shifts for different lightening conditions.
+Left/right images is useful to train the recovery driving scenario. Brightness/channel shifts should help to make the model immune to varying contrast and illumination.
 
 To reduce the occurrences of low and zero angle data points I adjusted dataset based on histogram with a distribution fit line. Everything above the optimal distribution fit line gets dropped so that I expect to get the car to drive more smoothly (see pictures below)
 
@@ -107,11 +107,11 @@ For details about how I created the training data, see the next section.
 
 #### 1. Solution Design Approach
 
-The overall strategy for deriving a model architecture was to start from the NVIDIA model because it was recommended in classes.
+The overall strategy for deriving a model architecture was to start from the NVIDIA model because it was recommended in class.
 
 In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model had a low mean squared error on the training set but a high mean squared error on the validation set. This implied that the model was overfitting. 
 
-To combat the overfitting, I modified the model so that I've added an additional dropout layer to avoid overfitting after the convolution layers and adjusted dataset based histogram distribution fit line.
+To combat the overfitting, I modified the model so that I've added an additional dropout layer to avoid overfitting after the convolution layers and adjusted dataset based on histogram distribution fit line.
 
 The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track where there was a sharp curve and low-contrast roadside. To improve the driving behavior in these cases, I was playing with number of histogram bins which I do use to tune angles and angle correction value for left and right images.
 
@@ -152,12 +152,12 @@ To capture good driving behavior, I used Udacity dataset. Here is an example ima
 
 ![Center lane image](doc/center_image.png)
 
-To get more data points I used image augmentation, I also flipped images and angles thinking that this would this would solve the left turn bias problem. For example, here is an image that has then been flipped:
+To get more data points I used image augmentation, I also flipped images and angles thinking that this would solve the left turn bias problem. For example, here is an image that has then been flipped:
 
 ![Flipped Image](doc/flipped_image.png)
 
 
-At the beginning I had 24108 number of data points (center, left, right included). I then preprocessed this data by reducing the occurrences of low and zero angle data points I've got 11541 data points.
+At the beginning I had 24108 number of data points (center, left, right included). I then preprocessed this data by reducing the occurrences of low and zero steering angle data points and got 11541 data points.
 
 I finally randomly shuffled the data set and put 20% of the data into a validation set ([link](model.py#L94)) 
 
