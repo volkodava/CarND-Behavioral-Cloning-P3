@@ -183,7 +183,10 @@ def flatten_driving_log(image_paths, angles, correction, rel_in_path=DATA_DIR):
     res_images_paths = []
     res_angles = []
 
-    for image_path, angle in tqdm(zip(image_paths, angles)):
+    for idx in tqdm(range(len(image_paths))):
+        image_path = image_paths[idx]
+        angle = angles[idx]
+
         (center, left, right) = image_path
 
         center, left, right = os.path.join(rel_in_path, center.strip()), \
@@ -212,7 +215,10 @@ def augment_driving_log(image_paths, angles, out_path=DATA_GENERATED_DIR):
     res_images_paths = []
     res_angles = []
 
-    for image_path, angle in tqdm(zip(image_paths, angles)):
+    for idx in tqdm(range(len(image_paths))):
+        image_path = image_paths[idx]
+        angle = angles[idx]
+
         transformed_image, transformed_angle = \
             random_transform(load_image(image_path), angle)
         transformed_path = os.path.join(out_path, basename(image_path))
@@ -246,12 +252,11 @@ def reduce_size_of(range_x, range_y, over_limit_num):
 def adjust_with_best_fit_line(X_input, y_input, angle_groups):
     bins, y = calc_optimal_distribution(y_input, bins_num=angle_groups)
     X_adj = y_adj = None
-    idx = 0
-    for idx, range_bin in tqdm(bins):
+    for idx in tqdm(range(len(bins))):
         if idx + 1 == len(bins):
             break
 
-        range_from = range_bin
+        range_from = bins[idx]
         range_to = bins[idx + 1]
         optimal_sample_num = int(y[idx])
 
@@ -299,8 +304,6 @@ def adjust_with_best_fit_line(X_input, y_input, angle_groups):
             X_adj = np.concatenate((X_adj, new_range_x), axis=0)
             y_adj = np.concatenate((y_adj, new_range_y), axis=0)
 
-        idx += 1
-
     return X_adj, y_adj
 
 
@@ -308,15 +311,19 @@ def load_input_data(correction, angle_groups,
                     init_size=-1, init_shuffle=False, logfile=LOG_FILE):
     print("Load data", flush=True)
     X, y = load_driving_log(logfile=logfile, size=init_size, random=init_shuffle)
+    print("{} loaded".format(len(X)))
 
     print("Flatten data", flush=True)
     X_flat, y_flat = flatten_driving_log(X, y, correction=correction)
+    print("{} after flattening".format(len(X_flat)))
 
     print("Augment data", flush=True)
     X_input, y_input = augment_driving_log(X_flat, y_flat)
+    print("{} after augmenting".format(len(X_input)))
 
     print("Adjust data", flush=True)
     X_adj, y_adj = adjust_with_best_fit_line(X_input, y_input, angle_groups)
+    print("{} after adjustment".format(len(X_adj)))
 
     return X_adj, y_adj
 
